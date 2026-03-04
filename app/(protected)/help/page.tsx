@@ -63,62 +63,62 @@ export default function HelpPage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-background text-foreground">
       <SidebarNav />
 
       <main className="flex-1 lg:ml-64">
         <div className="p-4 lg:p-8 space-y-8">
           <div className="pt-12 lg:pt-0">
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-100">
+            <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
               Help & Support
             </h1>
-            <p className="text-slate-400 mt-2">
+            <p className="text-muted-foreground mt-2">
               Find answers to common questions or contact our support team
             </p>
           </div>
 
           {/* Quick Links */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-slate-800 bg-slate-900/50 hover:bg-slate-900/70 transition-colors cursor-pointer">
+            <Card className="border-border bg-card/50 hover:bg-card/70 transition-colors cursor-pointer">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                    <Phone className="w-6 h-6 text-blue-400" />
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Phone className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-100">Call Support</p>
-                    <p className="text-sm text-slate-400 mt-1">1-800-POS-HELP</p>
-                    <p className="text-xs text-slate-500 mt-2">Mon-Fri, 9AM-6PM</p>
+                    <p className="font-semibold text-foreground">Call Support</p>
+                    <p className="text-sm text-muted-foreground mt-1">1-800-POS-HELP</p>
+                    <p className="text-xs text-muted-foreground mt-2">Mon-Fri, 9AM-6PM</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-slate-800 bg-slate-900/50 hover:bg-slate-900/70 transition-colors cursor-pointer">
+            <Card className="border-border bg-card/50 hover:bg-card/70 transition-colors cursor-pointer">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                    <Mail className="w-6 h-6 text-green-400" />
+                  <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                    <Mail className="w-6 h-6 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-100">Email Support</p>
-                    <p className="text-sm text-slate-400 mt-1">support@mariahavenpos.com</p>
-                    <p className="text-xs text-slate-500 mt-2">Response within 24 hours</p>
+                    <p className="font-semibold text-foreground">Email Support</p>
+                    <p className="text-sm text-muted-foreground mt-1">support@mariahavenpos.com</p>
+                    <p className="text-xs text-muted-foreground mt-2">Response within 24 hours</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-slate-800 bg-slate-900/50 hover:bg-slate-900/70 transition-colors cursor-pointer">
+            <Card className="border-border bg-card/50 hover:bg-card/70 transition-colors cursor-pointer">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                    <Clock className="w-6 h-6 text-purple-400" />
+                  <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
+                    <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-100">Chat Support</p>
-                    <p className="text-sm text-slate-400 mt-1">Live chat available</p>
-                    <p className="text-xs text-slate-500 mt-2">During business hours</p>
+                    <p className="font-semibold text-foreground">Chat Support</p>
+                    <p className="text-sm text-muted-foreground mt-1">Live chat available</p>
+                    <p className="text-xs text-muted-foreground mt-2">During business hours</p>
                   </div>
                 </div>
               </CardContent>
@@ -127,20 +127,20 @@ export default function HelpPage() {
 
           {/* FAQ Section */}
           <div>
-            <h2 className="text-2xl font-bold text-slate-100 mb-4">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
               Frequently Asked Questions
             </h2>
 
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search FAQs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-slate-900/50 border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20"
+                  className="pl-10 bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                 />
               </div>
             </div>
@@ -151,32 +151,32 @@ export default function HelpPage() {
                 filteredFaqs.map((faq, idx) => (
                   <Card
                     key={idx}
-                    className="border-slate-800 bg-slate-900/50 overflow-hidden cursor-pointer hover:border-slate-700 transition-colors"
+                    className="border-border bg-card/50 overflow-hidden cursor-pointer hover:border-primary transition-colors"
                     onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
                   >
                     <div className="p-4 flex items-center justify-between">
                       <div className="flex items-start gap-4 flex-1">
-                        <HelpCircle className="w-5 h-5 text-blue-400 mt-1 flex-shrink-0" />
-                        <p className="font-medium text-slate-100">{faq.question}</p>
+                        <HelpCircle className="w-5 h-5 text-primary mt-1 shrink-0" />
+                        <p className="font-medium text-foreground">{faq.question}</p>
                       </div>
                       <ChevronDown
-                        className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${
+                        className={`w-5 h-5 text-muted-foreground transition-transform shrink-0 ${
                           expandedFaq === idx ? 'rotate-180' : ''
                         }`}
                       />
                     </div>
 
                     {expandedFaq === idx && (
-                      <div className="px-4 pb-4 border-t border-slate-800 pt-4">
-                        <p className="text-slate-300 text-sm leading-relaxed">{faq.answer}</p>
+                      <div className="px-4 pb-4 border-t border-border pt-4">
+                        <p className="text-muted-foreground text-sm leading-relaxed">{faq.answer}</p>
                       </div>
                     )}
                   </Card>
                 ))
               ) : (
-                <Card className="border-slate-800 bg-slate-900/50">
+                <Card className="border-border bg-card/50">
                   <CardContent className="pt-8 pb-8">
-                    <p className="text-center text-slate-400">No FAQs found matching your search.</p>
+                    <p className="text-center text-muted-foreground">No FAQs found matching your search.</p>
                   </CardContent>
                 </Card>
               )}
@@ -184,36 +184,36 @@ export default function HelpPage() {
           </div>
 
           {/* Contact Form */}
-          <Card className="border-slate-800 bg-slate-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
-              <CardTitle className="text-slate-100">Still need help?</CardTitle>
+              <CardTitle className="text-foreground">Still need help?</CardTitle>
               <CardDescription>Submit a support request</CardDescription>
             </CardHeader>
             <CardContent>
               <form className="space-y-4">
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-300">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Subject
                   </label>
                   <Input
                     type="text"
                     placeholder="Brief description of your issue"
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20"
+                    className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-300">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Description
                   </label>
                   <textarea
                     placeholder="Describe your issue in detail"
                     rows={5}
-                    className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg p-3"
+                    className="w-full bg-background border border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 rounded-lg p-3"
                   />
                 </div>
 
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium w-full">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium w-full">
                   Submit Support Request
                 </Button>
               </form>

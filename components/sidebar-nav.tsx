@@ -21,22 +21,34 @@ import {
   Wallet,
   BarChart,
   CheckCircle2,
+  Utensils,
+  ConciergeBell,
+  Brush,
+  Layout,
+  Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const navigationItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['cashier', 'supervisor', 'manager', 'admin'] },
   { href: '/rooms', label: 'Room Management', icon: Bed, roles: ['manager', 'admin', 'housekeeping'] },
+  { href: '/housekeeping', label: 'Housekeeping', icon: Brush, roles: ['housekeeping', 'admin', 'manager'] },
   { href: '/inventory', label: 'Inventory', icon: Package, roles: ['manager', 'admin'] },
   { href: '/suppliers', label: 'Suppliers & POs', icon: Truck, roles: ['manager', 'admin'] },
   { href: '/staff', label: 'Staff Management', icon: Users, roles: ['manager', 'admin'] },
   { href: '/menu', label: 'Menu Management', icon: Receipt, roles: ['manager', 'admin'] },
   { href: '/waiter-clearing', label: 'Waiter Clearing', icon: CheckCircle2, roles: ['manager', 'admin', 'waiter'] },
+  { href: '/pos', label: 'POS Terminal', icon: Receipt, roles: ['admin', 'manager', 'cashier', 'waiter', 'staff', 'kitchen_staff', 'receptionist', 'housekeeping', 'delivery'] },
+  { href: '/kitchen', label: 'Kitchen Display', icon: Utensils, roles: ['kitchen_staff', 'admin', 'manager'] },
+  { href: '/reception', label: 'Reception Desk', icon: ConciergeBell, roles: ['receptionist', 'admin', 'manager'] },
+  { href: '/tables', label: 'Table Layout', icon: Layout, roles: ['admin', 'manager', 'waiter'] },
+  { href: '/maintenance', label: 'Maintenance', icon: Wrench, roles: ['housekeeping', 'admin', 'manager'] },
   { href: '/shifts', label: 'Shifts', icon: Clock, roles: ['cashier', 'supervisor', 'manager', 'admin', 'waiter'] },
   { href: '/performance', label: 'Performance', icon: TrendingUp, roles: ['cashier', 'supervisor', 'manager', 'admin'] },
-  { href: '/accounting', label: 'Accounting', icon: Wallet, roles: ['manager', 'admin', 'accounts'] },
-  { href: '/reports', label: 'Reports', icon: BarChart, roles: ['manager', 'admin', 'accounts'] },
+  { href: '/accounting', label: 'Accounting', icon: Wallet, roles: ['manager', 'admin', 'accountant', 'accounts'] },
+  { href: '/reports', label: 'Reports', icon: BarChart, roles: ['manager', 'admin', 'accountant', 'accounts'] },
   { href: '/settings', label: 'Settings', icon: Settings, roles: ['cashier', 'supervisor', 'manager', 'admin'] },
   { href: '/help', label: 'Help', icon: HelpCircle, roles: ['cashier', 'supervisor', 'manager', 'admin'] },
 ];
@@ -63,7 +75,7 @@ export function SidebarNav() {
           variant="outline"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-slate-900/80 border-slate-700 text-slate-100 hover:bg-slate-800"
+          className="bg-background border-border text-foreground hover:bg-accent"
         >
           {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </Button>
@@ -72,28 +84,31 @@ export function SidebarNav() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 h-screen w-64 bg-slate-900 border-r border-slate-800 flex flex-col transition-transform duration-300 z-40',
+          'fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col transition-transform duration-300 z-40',
           'lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-slate-800">
-          <h1 className="text-xl font-bold text-slate-100">
-            <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-              MH
-            </span>
-            {' '}POS
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">Point of Sale System</p>
+        <div className="p-6 border-b border-sidebar-border flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-sidebar-foreground">
+              <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+                MH
+              </span>
+              {' '}POS
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1">Point of Sale System</p>
+          </div>
+          <ThemeToggle />
         </div>
 
         {/* User Info */}
         {user && (
-          <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/50">
-            <p className="text-sm font-medium text-slate-100">{user.name}</p>
-            <p className="text-xs text-slate-400 mt-1 capitalize">{user.role}</p>
-            <p className="text-xs text-slate-500 mt-1">{user.employeeId}</p>
+          <div className="px-6 py-4 border-b border-sidebar-border bg-muted/30">
+            <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
+            <p className="text-xs text-muted-foreground mt-1 capitalize">{user.role}</p>
+            <p className="text-xs text-muted-foreground mt-1">{user.employeeId}</p>
           </div>
         )}
 
@@ -110,8 +125,8 @@ export function SidebarNav() {
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                 )}
               >
                 <Icon className="w-5 h-5" />
@@ -122,10 +137,10 @@ export function SidebarNav() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-6 border-t border-slate-800 space-y-2">
+        <div className="p-6 border-t border-sidebar-border space-y-2">
           <Button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30"
+            className="w-full flex items-center gap-2 bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20"
             variant="outline"
           >
             <LogOut className="w-4 h-4" />

@@ -12,7 +12,6 @@ import {
   Banknote, 
   Split, 
   Trash2, 
-  Clock, 
   User, 
   Receipt,
   ArrowRightCircle
@@ -33,7 +32,7 @@ export default function WaiterClearingPage() {
     : MOCK_TABLES.filter(t => t.status === filter);
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-background text-foreground">
       <SidebarNav />
 
       <main className="flex-1 lg:ml-64">
@@ -41,27 +40,27 @@ export default function WaiterClearingPage() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-12 lg:pt-0">
             <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-slate-100 flex items-center gap-3">
-                <CheckCircle2 className="w-8 h-8 text-blue-500" />
+              <h1 className="text-3xl lg:text-4xl font-bold text-foreground flex items-center gap-3">
+                <CheckCircle2 className="w-8 h-8 text-primary" />
                 Waiter Clearing
               </h1>
-              <p className="text-slate-400 mt-2">
+              <p className="text-muted-foreground mt-2">
                 Manage your active tables, settle bills, and finalize tips.
               </p>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <span className="text-xs text-slate-400 uppercase tracking-wider">Unsettled Tips</span>
-              <span className="text-lg font-bold text-blue-400">$24.50</span>
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-lg">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Unsettled Tips</span>
+              <span className="text-lg font-bold text-primary">$24.50</span>
             </div>
           </div>
 
           {/* Table Filters */}
-          <div className="flex gap-2 bg-slate-900/50 p-1 rounded-lg border border-slate-800 w-fit">
+          <div className="flex gap-2 bg-muted p-1 rounded-lg border border-border w-fit">
             <Button
               variant={filter === 'all' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setFilter('all')}
-              className={filter === 'all' ? 'bg-blue-600' : 'text-slate-400'}
+              className={filter === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}
             >
               All Tables
             </Button>
@@ -69,7 +68,7 @@ export default function WaiterClearingPage() {
               variant={filter === 'occupied' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setFilter('occupied')}
-              className={filter === 'occupied' ? 'bg-blue-600' : 'text-slate-400'}
+              className={filter === 'occupied' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}
             >
               Occupied
             </Button>
@@ -77,7 +76,7 @@ export default function WaiterClearingPage() {
               variant={filter === 'clearing' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setFilter('clearing')}
-              className={filter === 'clearing' ? 'bg-blue-600' : 'text-slate-400'}
+              className={filter === 'clearing' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}
             >
               Pending Settlement
             </Button>
@@ -86,45 +85,45 @@ export default function WaiterClearingPage() {
           {/* Tables Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredTables.map((table) => (
-              <Card key={table.id} className={`border-slate-800 bg-slate-900/50 hover:border-slate-700 transition-all ${table.status === 'clearing' ? 'ring-1 ring-blue-500/30' : ''}`}>
+              <Card key={table.id} className={`border-border bg-card/50 hover:border-primary/50 transition-all ${table.status === 'clearing' ? 'ring-1 ring-primary/30' : ''}`}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <span className="text-2xl font-bold text-slate-100">{table.id}</span>
+                    <span className="text-2xl font-bold text-foreground">{table.id}</span>
                     <Badge className={
                       table.status === 'occupied' 
-                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
-                        : 'bg-orange-500/10 text-orange-400 border-orange-500/30 animate-pulse'
+                        ? 'bg-primary/10 text-primary border border-primary/30' 
+                        : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30 animate-pulse'
                     }>
                       {table.status === 'occupied' ? 'Dining' : 'Clearing'}
                     </Badge>
                   </div>
-                  <CardDescription className="flex items-center gap-2 text-slate-500">
+                  <CardDescription className="flex items-center gap-2 text-muted-foreground">
                     <User className="w-3 h-3" />
                     {table.guestCount} Guests • {table.items} Items
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4 space-y-4">
-                  <div className="flex justify-between items-center bg-slate-950/50 p-3 rounded-lg border border-slate-800">
-                    <span className="text-sm text-slate-400 font-medium uppercase tracking-tight">Total</span>
-                    <span className="text-xl font-bold text-slate-100">${table.subtotal.toFixed(2)}</span>
+                  <div className="flex justify-between items-center bg-background p-3 rounded-lg border border-border">
+                    <span className="text-sm text-muted-foreground font-medium uppercase tracking-tight">Total</span>
+                    <span className="text-xl font-bold text-foreground">${table.subtotal.toFixed(2)}</span>
                   </div>
 
                   {table.status === 'occupied' ? (
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
                       <Receipt className="w-4 h-4" />
                       Close Table
                     </Button>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" className="border-slate-700 text-slate-100 hover:bg-slate-800 flex items-center justify-center gap-2">
-                        <CreditCard className="w-4 h-4 text-blue-400" />
+                      <Button variant="outline" className="border-input text-foreground hover:bg-accent flex items-center justify-center gap-2">
+                        <CreditCard className="w-4 h-4 text-primary" />
                         Card
                       </Button>
-                      <Button variant="outline" className="border-slate-700 text-slate-100 hover:bg-slate-800 flex items-center justify-center gap-2">
-                        <Banknote className="w-4 h-4 text-green-400" />
+                      <Button variant="outline" className="border-input text-foreground hover:bg-accent flex items-center justify-center gap-2">
+                        <Banknote className="w-4 h-4 text-green-600 dark:text-green-400" />
                         Cash
                       </Button>
-                      <Button variant="outline" className="col-span-2 border-slate-700 text-slate-400 hover:bg-slate-800 flex items-center justify-center gap-2 text-xs">
+                      <Button variant="outline" className="col-span-2 border-input text-muted-foreground hover:bg-accent flex items-center justify-center gap-2 text-xs">
                         <Split className="w-3 h-3" />
                         Split Bill
                       </Button>
@@ -132,7 +131,7 @@ export default function WaiterClearingPage() {
                   )}
 
                   <div className="pt-2">
-                    <Button variant="ghost" className="w-full text-xs text-slate-500 hover:text-red-400 transition-colors flex items-center justify-center gap-1">
+                    <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center gap-1">
                       <Trash2 className="w-3 h-3" />
                       Transfer Table
                     </Button>
@@ -143,10 +142,10 @@ export default function WaiterClearingPage() {
           </div>
 
           {/* Tip Summary & Handover */}
-          <Card className="border-slate-700 bg-linear-to-r from-blue-600/10 to-transparent">
+          <Card className="border-border bg-linear-to-r from-primary/10 to-transparent">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <UtensilsCrossed className="w-5 h-5 text-blue-500" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-primary" />
                 End of Shift Handover
               </CardTitle>
               <CardDescription>Finalize all tables and process tips for your shift</CardDescription>
@@ -154,15 +153,15 @@ export default function WaiterClearingPage() {
             <CardContent className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex gap-8">
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Total Sales</p>
-                  <p className="text-2xl font-bold text-slate-100">$845.25</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Sales</p>
+                  <p className="text-2xl font-bold text-foreground">$845.25</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Total Tips</p>
-                  <p className="text-2xl font-bold text-green-400">$112.50</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Tips</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">$112.50</p>
                 </div>
               </div>
-              <Button className="bg-slate-100 text-slate-950 hover:bg-white font-bold py-3 px-8 rounded-lg shadow-lg shadow-white/5 flex items-center gap-2">
+              <Button className="bg-foreground text-background hover:bg-foreground/90 font-bold py-3 px-8 rounded-lg shadow-lg flex items-center gap-2">
                 Finalize & Tip-Out
                 <ArrowRightCircle className="w-5 h-5" />
               </Button>

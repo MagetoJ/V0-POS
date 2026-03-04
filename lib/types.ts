@@ -1,4 +1,43 @@
-export type UserRole = 'cashier' | 'supervisor' | 'manager' | 'admin' | 'accounts' | 'housekeeping' | 'waiter';
+export type UserRole = 
+  | 'cashier' 
+  | 'supervisor' 
+  | 'manager' 
+  | 'admin' 
+  | 'accounts' 
+  | 'housekeeping' 
+  | 'waiter'
+  | 'staff'
+  | 'kitchen_staff'
+  | 'receptionist'
+  | 'delivery'
+  | 'accountant';
+
+export interface Table {
+  id: string;
+  number: string;
+  capacity: number;
+  status: 'available' | 'occupied' | 'reserved';
+  zone?: string;
+}
+
+export interface MaintenanceRequest {
+  id: string;
+  roomNumber: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'in_progress' | 'completed';
+  requestedBy: string;
+  createdAt: string;
+}
+
+export interface StockTransfer {
+  id: string;
+  fromLocation: string;
+  toLocation: string;
+  items: POItem[];
+  status: 'pending' | 'completed';
+  timestamp: string;
+}
 
 export interface User {
   id: string;

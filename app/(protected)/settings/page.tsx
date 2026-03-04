@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarNav } from '@/components/sidebar-nav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/auth-context';
 import {
   Lock,
   Mail,
   Phone,
-  User,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -22,6 +23,65 @@ export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isOnlineEnabled, setIsOnlineEnabled] = useState(false);
+  const [onlineSlug, setOnlineSlug] = useState('mariahavens');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setIsOnlineEnabled(data.is_online_enabled);
+          setOnlineSlug(data.online_slug);
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleToggleOnlineStore = async (enabled: boolean) => {
+    setIsOnlineEnabled(enabled);
+    try {
+      const response = await fetch('/api/settings/online-store', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update setting');
+      }
+    } catch (error) {
+      console.error('Error updating online store setting:', error);
+      // Revert state if failed
+      setIsOnlineEnabled(!enabled);
+    }
+  };
+
+  const handleUpdateSlug = async () => {
+    try {
+      const response = await fetch('/api/settings/online-store', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slug: onlineSlug }),
+      });
+      if (response.ok) {
+        setSuccessMessage('Store link updated successfully');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        throw new Error('Failed to update slug');
+      }
+    } catch (error) {
+      console.error('Error updating slug:', error);
+      alert('Failed to update store link');
+    }
+  };
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -58,63 +118,63 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen bg-background text-foreground">
       <SidebarNav />
 
       <main className="flex-1 lg:ml-64">
         <div className="p-4 lg:p-8 space-y-8">
           <div className="pt-12 lg:pt-0">
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-100">
+            <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
               Settings
             </h1>
-            <p className="text-slate-400 mt-2">
+            <p className="text-muted-foreground mt-2">
               Manage your profile and security settings
             </p>
           </div>
 
           {successMessage && (
-            <Alert className="bg-green-950/20 border-green-900/40 text-green-100">
+            <Alert className="bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400">
               <CheckCircle2 className="h-4 w-4" />
               <AlertDescription>{successMessage}</AlertDescription>
             </Alert>
           )}
 
           {/* Profile Information */}
-          <Card className="border-slate-800 bg-slate-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
-              <CardTitle className="text-slate-100">Profile Information</CardTitle>
+              <CardTitle className="text-foreground">Profile Information</CardTitle>
               <CardDescription>View and manage your employee profile</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 {/* Read-only fields */}
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-300">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Employee ID
                   </label>
                   <Input
                     type="text"
                     value={user?.employeeId || ''}
                     disabled
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 disabled:opacity-60"
+                    className="bg-background border-input text-foreground disabled:opacity-60"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-300">
+                  <label className="block text-sm font-medium text-muted-foreground">
                     Role
                   </label>
                   <Input
                     type="text"
                     value={user?.role.charAt(0).toUpperCase() + user?.role.slice(1) || ''}
                     disabled
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 disabled:opacity-60"
+                    className="bg-background border-input text-foreground disabled:opacity-60"
                   />
                 </div>
 
                 {/* Editable fields */}
                 <div className="space-y-2">
-                  <label htmlFor="name" className="block text-sm font-medium text-slate-300">
+                  <label htmlFor="name" className="block text-sm font-medium text-muted-foreground">
                     Full Name
                   </label>
                   <Input
@@ -123,12 +183,12 @@ export default function SettingsPage() {
                     type="text"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20"
+                    className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <label htmlFor="email" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Mail className="w-4 h-4" />
                     Email Address
                   </label>
@@ -138,12 +198,12 @@ export default function SettingsPage() {
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20"
+                    className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="phone" className="block text-sm font-medium text-slate-300 flex items-center gap-2">
+                  <label htmlFor="phone" className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Phone className="w-4 h-4" />
                     Phone Number
                   </label>
@@ -153,13 +213,13 @@ export default function SettingsPage() {
                     type="tel"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20"
+                    className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium w-full"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium w-full"
                 >
                   Save Changes
                 </Button>
@@ -168,10 +228,10 @@ export default function SettingsPage() {
           </Card>
 
           {/* Security Settings */}
-          <Card className="border-slate-800 bg-slate-900/50">
+          <Card className="border-border bg-card/50">
             <CardHeader>
-              <CardTitle className="text-slate-100 flex items-center gap-2">
-                <Lock className="w-5 h-5" />
+              <CardTitle className="text-foreground flex items-center gap-2">
+                <Lock className="w-5 h-5 text-primary" />
                 Security Settings
               </CardTitle>
               <CardDescription>Change your PIN for account security</CardDescription>
@@ -179,7 +239,7 @@ export default function SettingsPage() {
             <CardContent>
               <form onSubmit={handleChangePin} className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="currentPin" className="block text-sm font-medium text-slate-300">
+                  <label htmlFor="currentPin" className="block text-sm font-medium text-muted-foreground">
                     Current PIN
                   </label>
                   <div className="relative">
@@ -190,12 +250,12 @@ export default function SettingsPage() {
                       value={formData.currentPin}
                       onChange={handleInputChange}
                       placeholder="Enter current PIN"
-                      className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20 pr-10"
+                      className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20 pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -203,7 +263,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="newPin" className="block text-sm font-medium text-slate-300">
+                  <label htmlFor="newPin" className="block text-sm font-medium text-muted-foreground">
                     New PIN
                   </label>
                   <div className="relative">
@@ -214,12 +274,12 @@ export default function SettingsPage() {
                       value={formData.newPin}
                       onChange={handleInputChange}
                       placeholder="Enter new PIN (4+ digits)"
-                      className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20 pr-10"
+                      className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20 pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPin(!showPin)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -227,7 +287,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="confirmPin" className="block text-sm font-medium text-slate-300">
+                  <label htmlFor="confirmPin" className="block text-sm font-medium text-muted-foreground">
                     Confirm New PIN
                   </label>
                   <Input
@@ -237,13 +297,13 @@ export default function SettingsPage() {
                     value={formData.confirmPin}
                     onChange={handleInputChange}
                     placeholder="Confirm new PIN"
-                    className="bg-slate-900/50 border-slate-700 text-slate-100 focus:border-blue-500 focus:ring-blue-500/20"
+                    className="bg-background border-input text-foreground focus:border-primary focus:ring-primary/20"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium w-full"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium w-full"
                 >
                   Change PIN
                 </Button>
@@ -251,33 +311,79 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Account Information */}
-          <Card className="border-slate-800 bg-slate-900/50">
+          {/* System Settings */}
+          <Card className="border-border bg-card/50">
             <CardHeader>
-              <CardTitle className="text-slate-100">Account Information</CardTitle>
+              <CardTitle className="text-foreground">System Settings</CardTitle>
+              <CardDescription>Configure core system features</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-foreground">Showcase Inventory Online</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, your inventory will be visible on your public website.
+                  </p>
+                </div>
+                <Switch 
+                  checked={isOnlineEnabled} 
+                  onCheckedChange={handleToggleOnlineStore} 
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="onlineSlug" className="text-foreground">Unique Online Link</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 flex items-center bg-background border border-input rounded-md px-3 text-muted-foreground text-sm overflow-hidden">
+                      <span className="shrink-0">menu.mariahavens.com/</span>
+                      <input
+                        id="onlineSlug"
+                        type="text"
+                        value={onlineSlug}
+                        onChange={(e) => setOnlineSlug(e.target.value)}
+                        className="flex-1 bg-transparent border-none outline-none text-foreground ml-1"
+                      />
+                    </div>
+                    <Button onClick={handleUpdateSlug} size="sm" variant="secondary">
+                      Update Link
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This is the unique URL where customers can view your live inventory.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Account Information */}
+          <Card className="border-border bg-card/50">
+            <CardHeader>
+              <CardTitle className="text-foreground">Account Information</CardTitle>
               <CardDescription>Additional account details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-wide">Store Location</p>
-                  <p className="text-sm font-medium text-slate-100 mt-1">Store #{user?.storeId}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Store Location</p>
+                  <p className="text-sm font-medium text-foreground mt-1">Store #{user?.storeId}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-wide">Hire Date</p>
-                  <p className="text-sm font-medium text-slate-100 mt-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Hire Date</p>
+                  <p className="text-sm font-medium text-foreground mt-1">
                     {user?.hireDate ? new Date(user.hireDate).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-wide">Account Status</p>
-                  <p className="text-sm font-medium text-green-400 mt-1 capitalize">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Account Status</p>
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400 mt-1 capitalize">
                     {user?.status}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase tracking-wide">Account Type</p>
-                  <p className="text-sm font-medium text-slate-100 mt-1 capitalize">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Account Type</p>
+                  <p className="text-sm font-medium text-foreground mt-1 capitalize">
                     {user?.role}
                   </p>
                 </div>
