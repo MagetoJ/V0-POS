@@ -40,7 +40,7 @@ export default function PerformancePage() {
   const metrics: MetricCard[] = [
     {
       label: 'Weekly Sales',
-      value: '$23,500',
+      value: 'KSh 23,500',
       change: '+12% vs last week',
       icon: <TrendingUp className="w-5 h-5 text-green-400" />,
     },
@@ -116,7 +116,7 @@ export default function PerformancePage() {
                     stroke="hsl(var(--primary))" 
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--primary))' }}
-                    name="Sales ($)"
+                    name="Sales (KSh)"
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -217,7 +217,7 @@ export default function PerformancePage() {
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 shrink-0" />
                 <p className="text-sm text-muted-foreground">
-                  Your Friday sales (${performanceData[4].sales}) were your best this week. Continue that momentum!
+                  Your Friday sales (KSh {performanceData[4].sales.toLocaleString()}) were your best this week. Continue that momentum!
                 </p>
               </div>
               <div className="flex items-start gap-3">

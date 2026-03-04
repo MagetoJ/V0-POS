@@ -10,3 +10,9 @@ router = APIRouter(prefix="/api/staff", tags=["staff"])
 def get_all_staff(db: Session = Depends(database.get_db)):
     # This queries the 'staff' table in your Render database
     return db.query(Staff).all()
+
+@router.get("/public", response_model=list[dict])
+def get_public_staff_list(db: Session = Depends(database.get_db)):
+    # Only return necessary fields for public picker
+    staff = db.query(Staff).filter(Staff.status == 'active').all()
+    return [{"employee_id": s.employee_id, "name": s.name} for s in staff]

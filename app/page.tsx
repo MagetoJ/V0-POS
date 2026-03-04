@@ -20,35 +20,56 @@ export default function LoginPage() {
 
   const performLogin = async (id: string, p: string) => {
     setError('');
-    const loadingState = id === 'EMP001' && p === '1234' ? setIsQuickPOSLoading : setIsLoading;
-    loadingState(true);
+    setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employeeId: id.toUpperCase(),
-          pin: p,
+          employee_id: id,
+          password: p,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Login failed. Please try again.');
-        loadingState(false);
+        setError(data.detail || 'Login failed. Please try again.');
+        setIsLoading(false);
         return;
       }
 
       // Update auth context state and localStorage
-      login(data);
+      const session = {
+        user: {
+          id: data.employee_id,
+          employeeId: data.employee_id,
+          name: data.name,
+          role: data.role,
+        },
+        token: data.access_token,
+        expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+      };
       
-      // Redirect to dashboard
-      router.push('/dashboard');
+      login(session);
+      
+      // Role-based redirection map matching ProtectedLayout
+      const roleRoutes: Record<string, string> = {
+        admin: '/dashboard',
+        manager: '/dashboard',
+        kitchen_staff: '/kitchen',
+        receptionist: '/rooms',
+        accountant: '/accounting',
+        cashier: '/quick-pos',
+        waiter: '/pos'
+      };
+
+      const targetRoute = roleRoutes[data.role] || '/dashboard';
+      router.push(targetRoute);
     } catch {
-      setError('An error occurred. Please try again.');
-      loadingState(false);
+      setError('Connection to backend failed. Please ensure the API is running.');
+      setIsLoading(false);
     }
   };
 
@@ -57,10 +78,8 @@ export default function LoginPage() {
     await performLogin(employeeId, pin);
   };
 
-  const handleQuickPOS = async () => {
-    setEmployeeId('EMP001');
-    setPin('1234');
-    await performLogin('EMP001', '1234');
+  const handleQuickPOS = () => {
+    router.push('/quick-pos');
   };
 
   return (
@@ -103,7 +122,7 @@ export default function LoginPage() {
                 type="text"
                 placeholder="e.g., EMP001"
                 value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value.toUpperCase())}
+                onChange={(e) => setEmployeeId(e.target.value)}
                 disabled={isLoading}
                 className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
                 autoFocus
@@ -158,21 +177,11 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              disabled={isLoading || isQuickPOSLoading}
               onClick={handleQuickPOS}
               className="w-full border-input text-foreground hover:bg-accent hover:text-accent-foreground font-medium py-2 rounded-lg transition-all flex items-center justify-center gap-2"
             >
-              {isQuickPOSLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading POS...
-                </>
-              ) : (
-                <>
-                  <Monitor className="w-4 h-4" />
-                  Quick POS Access
-                </>
-              )}
+              <Monitor className="w-4 h-4" />
+              Quick POS Access
             </Button>
           </form>
 

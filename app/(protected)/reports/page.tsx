@@ -96,7 +96,7 @@ export default function ReportsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <p className="text-2xl font-bold text-foreground">$45,100.50</p>
+                  <p className="text-2xl font-bold text-foreground">KSh 45,100.50</p>
                   <div className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
                     <ArrowUpRight className="w-3 h-3 mr-1" />
                     +12.5%
@@ -110,7 +110,7 @@ export default function ReportsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <p className="text-2xl font-bold text-foreground">$26,420.00</p>
+                  <p className="text-2xl font-bold text-foreground">KSh 26,420.00</p>
                   <div className="flex items-center text-destructive text-xs font-medium">
                     <ArrowUpRight className="w-3 h-3 mr-1" />
                     +4.2%
@@ -124,7 +124,7 @@ export default function ReportsPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
-                  <p className="text-2xl font-bold text-primary">$18,680.50</p>
+                  <p className="text-2xl font-bold text-primary">KSh 18,680.50</p>
                   <div className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
                     <ArrowUpRight className="w-3 h-3 mr-1" />
                     +24.1%
@@ -162,14 +162,14 @@ export default function ReportsPage() {
                     <BarChart data={REVENUE_DATA} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="currentColor" opacity={0.1} />
                       <XAxis dataKey="name" stroke="currentColor" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis stroke="currentColor" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                      <YAxis stroke="currentColor" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `KSh ${value}`} />
                       <Tooltip 
                         contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px' }}
                         itemStyle={{ color: 'var(--foreground)' }}
                       />
                       <Legend />
-                      <Bar dataKey="revenue" fill="var(--color-chart-1)" name="Revenue ($)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expenses" fill="var(--color-destructive)" name="Expenses ($)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="revenue" fill="var(--color-chart-1)" name="Revenue (KSh)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenses" fill="var(--color-destructive)" name="Expenses (KSh)" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -212,7 +212,7 @@ export default function ReportsPage() {
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: `var(--color-chart-${index + 1})` }} />
                         <span className="text-muted-foreground">{item.name}</span>
                       </div>
-                      <span className="text-foreground font-medium">${item.value}</span>
+                      <span className="text-foreground font-medium">KSh {item.value.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>
@@ -230,15 +230,15 @@ export default function ReportsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Average Daily Rate (ADR)</p>
-                  <p className="text-xl font-bold text-foreground">$115.00</p>
+                  <p className="text-xl font-bold text-foreground">KSh 115</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Revenue Per Available Room (RevPAR)</p>
-                  <p className="text-xl font-bold text-foreground">$89.70</p>
+                  <p className="text-xl font-bold text-foreground">KSh 89.70</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Customer Acquisition Cost (Avg)</p>
-                  <p className="text-xl font-bold text-foreground">$12.50</p>
+                  <p className="text-xl font-bold text-foreground">KSh 12.50</p>
                 </div>
               </div>
             </CardContent>

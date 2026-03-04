@@ -26,6 +26,7 @@ import {
   Brush,
   Layout,
   Wrench,
+  ShoppingBag,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 
 const navigationItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['cashier', 'supervisor', 'manager', 'admin'] },
+  { href: '/quick-pos', label: 'Quick POS', icon: ShoppingBag, roles: ['admin', 'manager', 'cashier', 'waiter', 'staff'] },
   { href: '/rooms', label: 'Room Management', icon: Bed, roles: ['manager', 'admin', 'housekeeping'] },
   { href: '/housekeeping', label: 'Housekeeping', icon: Brush, roles: ['housekeeping', 'admin', 'manager'] },
   { href: '/inventory', label: 'Inventory', icon: Package, roles: ['manager', 'admin'] },

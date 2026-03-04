@@ -50,7 +50,7 @@ export default function WaiterClearingPage() {
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-lg">
               <span className="text-xs text-muted-foreground uppercase tracking-wider">Unsettled Tips</span>
-              <span className="text-lg font-bold text-primary">$24.50</span>
+              <span className="text-lg font-bold text-primary">KSh 24.50</span>
             </div>
           </div>
 
@@ -105,7 +105,7 @@ export default function WaiterClearingPage() {
                 <CardContent className="pt-4 space-y-4">
                   <div className="flex justify-between items-center bg-background p-3 rounded-lg border border-border">
                     <span className="text-sm text-muted-foreground font-medium uppercase tracking-tight">Total</span>
-                    <span className="text-xl font-bold text-foreground">${table.subtotal.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-foreground">KSh {table.subtotal.toLocaleString()}</span>
                   </div>
 
                   {table.status === 'occupied' ? (
@@ -154,11 +154,11 @@ export default function WaiterClearingPage() {
               <div className="flex gap-8">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Sales</p>
-                  <p className="text-2xl font-bold text-foreground">$845.25</p>
+                  <p className="text-2xl font-bold text-foreground">KSh 845.25</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Total Tips</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">$112.50</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">KSh 112.50</p>
                 </div>
               </div>
               <Button className="bg-foreground text-background hover:bg-foreground/90 font-bold py-3 px-8 rounded-lg shadow-lg flex items-center gap-2">

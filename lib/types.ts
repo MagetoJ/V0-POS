@@ -108,10 +108,14 @@ export interface InventoryItem {
   sku: string;
   name: string;
   category: string;
-  stockLevel: number;
-  reorderPoint: number;
+  item_type: 'bar' | 'food';
+  stock_level: number;
+  reorder_point: number;
   unit: string;
   price: number;
+  is_available: boolean;
+  show_online: boolean;
+  description?: string;
 }
 
 export interface Supplier {

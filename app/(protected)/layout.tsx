@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
@@ -11,13 +11,32 @@ export default function ProtectedLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const pathname = usePathname();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/');
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push('/'); // Redirect to login if not authenticated
+      } else if (user) {
+        // Standardized redirection map based on live database roles
+        const roleRoutes: Record<string, string> = {
+          admin: '/dashboard',
+          manager: '/dashboard',
+          kitchen_staff: '/kitchen',
+          receptionist: '/rooms',
+          accountant: '/accounting',
+          cashier: '/quick-pos',
+          waiter: '/pos'
+        };
+
+        const targetRoute = roleRoutes[user.role];
+        if (targetRoute && (pathname === '/' || pathname === '/dashboard')) {
+          router.push(targetRoute);
+        }
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, user, pathname]);
 
   if (isLoading) {
     return (

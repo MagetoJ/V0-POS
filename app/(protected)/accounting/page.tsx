@@ -113,7 +113,7 @@ export default function AccountingPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-foreground">$12,450.00</p>
+                <p className="text-2xl font-bold text-foreground">KSh 12,450</p>
               </CardContent>
             </Card>
             <Card className="border-border bg-card/50">
@@ -124,7 +124,7 @@ export default function AccountingPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-foreground">$10,150.00</p>
+                <p className="text-2xl font-bold text-foreground">KSh 10,150</p>
               </CardContent>
             </Card>
             <Card className="border-border bg-card/50">
@@ -135,7 +135,7 @@ export default function AccountingPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-primary">$2,300.00</p>
+                <p className="text-2xl font-bold text-primary">KSh 2,300</p>
               </CardContent>
             </Card>
           </div>
@@ -195,7 +195,7 @@ export default function AccountingPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-foreground font-semibold">
-                            ${invoice.total.toFixed(2)}
+                            KSh {invoice.total.toLocaleString()}
                           </TableCell>
                           <TableCell>
                             <Badge className={
@@ -255,7 +255,7 @@ export default function AccountingPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-foreground font-semibold">
-                            ${expense.amount.toFixed(2)}
+                            KSh {expense.amount.toLocaleString()}
                           </TableCell>
                           <TableCell>
                             <Badge className={
