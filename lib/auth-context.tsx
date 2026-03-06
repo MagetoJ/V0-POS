@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (session: AuthSession) => void;
+  login: (employee_id: string, pin: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -37,8 +37,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (session: AuthSession) => {
+  const login = async (employee_id: string, pin: string) => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee_id, pin }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Login failed');
+    }
+
+    const data = await response.json();
+    const apiUser = data.user;
+    const token = data.token;
+    
+    // Maintain AuthSession structure with snake_case fields as defined in types.ts
+    const session: AuthSession = {
+      user: {
+        id: apiUser.id || 0,
+        employee_id: apiUser.employee_id,
+        name: apiUser.name,
+        role: apiUser.role,
+        username: apiUser.username,
+        pin: '', // Don't store PIN in session
+        is_active: true,
+        requires_clearing: false
+      },
+      token: token,
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
+    };
+
     localStorage.setItem('auth-session', JSON.stringify(session));
+    localStorage.setItem('auth_token', token);
     setUser(session.user);
   };
 

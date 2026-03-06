@@ -18,11 +18,11 @@ async def checkout(order: schemas.order.Order, db: Session = Depends(get_db)):
         if not product:
             raise HTTPException(status_code=404, detail=f"Product with ID {item.product_id} not found")
 
-        if product.item_type == "bar":
+        if product.inventory_type == "bar":
             # Bar logic: Automatic Deduction
-            if product.stock_level < item.quantity:
+            if product.current_stock < item.quantity:
                 raise HTTPException(status_code=400, detail=f"Out of stock: {product.name}")
-            product.stock_level -= item.quantity
+            product.current_stock -= item.quantity
         
         # Food logic: Only the sale is recorded (recording logic would go here)
         # For now, we just ensure the product exists and is processed

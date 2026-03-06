@@ -14,10 +14,8 @@ import {
   Filter, 
   AlertTriangle, 
   History,
-  Globe,
   Loader2
 } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
 import { InventoryItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -48,42 +46,12 @@ export default function InventoryPage() {
     }
   };
 
-  const handleToggleOnline = async (itemId: string, currentStatus: boolean) => {
-    const newStatus = !currentStatus;
-    
-    // Update UI immediately (optimistic)
-    setInventory(prev => prev.map(item => 
-      item.id === itemId ? { ...item, show_online: newStatus } : item
-    ));
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/inventory/${itemId}/online`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ show_online: newStatus }),
-      });
-      if (!response.ok) throw new Error('Update failed');
-    } catch (error) {
-      console.error('Error updating inventory online status:', error);
-      toast({
-        title: "Update Failed",
-        description: "Could not update online status.",
-        variant: "destructive",
-      });
-      // Revert UI on error
-      setInventory(prev => prev.map(item => 
-        item.id === itemId ? { ...item, show_online: currentStatus } : item
-      ));
-    }
-  };
-
   const filteredInventory = inventory.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const lowStockCount = inventory.filter(i => i.item_type === 'bar' && i.stock_level < i.reorder_point).length;
-  const totalValue = inventory.reduce((sum, item) => sum + (item.price * (item.item_type === 'bar' ? item.stock_level : 1)), 0);
+  const lowStockCount = inventory.filter(i => i.inventory_type === 'bar' && i.current_stock < i.reorder_level).length;
+  const totalValue = inventory.reduce((sum, item) => sum + ((item.buying_price || 0) * (item.inventory_type === 'bar' ? item.current_stock : 1)), 0);
 
   if (loading) {
     return (
@@ -169,7 +137,7 @@ export default function InventoryPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-bold text-destructive">
-                  {inventory.filter(i => i.item_type === 'bar' && i.stock_level <= 0).length}
+                  {inventory.filter(i => i.inventory_type === 'bar' && i.current_stock <= 0).length}
                 </p>
               </CardContent>
             </Card>
@@ -188,7 +156,7 @@ export default function InventoryPage() {
             </div>
             <Button variant="outline" className="border-input text-foreground gap-2 hover:bg-accent">
               <Filter className="w-4 h-4" />
-              Categories
+              Filter
             </Button>
           </div>
 
@@ -200,16 +168,10 @@ export default function InventoryPage() {
                   <TableRow className="hover:bg-transparent border-border">
                     <TableHead className="text-muted-foreground">Item Name</TableHead>
                     <TableHead className="text-muted-foreground">Type</TableHead>
-                    <TableHead className="text-muted-foreground">Category</TableHead>
+                    <TableHead className="text-muted-foreground">Supplier</TableHead>
                     <TableHead className="text-muted-foreground">Inventory Logic</TableHead>
                     <TableHead className="text-muted-foreground">Status</TableHead>
-                    <TableHead className="text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-3 h-3" />
-                        Online
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-muted-foreground text-right">Unit Price</TableHead>
+                    <TableHead className="text-muted-foreground text-right">Buying Price</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -217,32 +179,30 @@ export default function InventoryPage() {
                     <TableRow key={item.id} className="border-border hover:bg-accent/50">
                       <TableCell>
                         <p className="font-medium text-foreground">{item.name}</p>
-                        <p className="text-muted-foreground text-[10px] font-mono">{item.sku}</p>
+                        <p className="text-muted-foreground text-[10px] font-mono">ID: {item.id}</p>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={item.item_type === 'bar' ? 'default' : 'secondary'} className="text-[10px] h-5">
-                          {item.item_type.toUpperCase()}
+                        <Badge variant={item.inventory_type === 'bar' ? 'default' : 'secondary'} className="text-[10px] h-5">
+                          {item.inventory_type.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="border-border text-muted-foreground font-normal">
-                          {item.category}
-                        </Badge>
+                        <span className="text-muted-foreground">{item.supplier || 'N/A'}</span>
                       </TableCell>
                       <TableCell className="text-foreground/80">
-                        {item.item_type === 'bar' ? (
+                        {item.inventory_type === 'bar' ? (
                           <div className="flex flex-col">
-                            <span className={item.stock_level < item.reorder_point ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-blue-400'}>
-                              {item.stock_level} {item.unit} (Auto)
+                            <span className={item.current_stock < item.reorder_level ? 'text-orange-600 dark:text-orange-400 font-bold' : 'text-blue-400'}>
+                              {item.current_stock} {item.unit} (Auto)
                             </span>
                           </div>
                         ) : (
-                          <span className="text-green-400 text-sm">Menu (Static)</span>
+                          <span className="text-green-400 text-sm">Kitchen (Static)</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        {item.item_type === 'bar' ? (
-                          item.stock_level < item.reorder_point ? (
+                        {item.inventory_type === 'bar' ? (
+                          item.current_stock < item.reorder_level ? (
                             <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/30">
                               Low Stock
                             </Badge>
@@ -257,14 +217,8 @@ export default function InventoryPage() {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Switch 
-                          checked={item.show_online} 
-                          onCheckedChange={() => handleToggleOnline(item.id, item.show_online)} 
-                        />
-                      </TableCell>
                       <TableCell className="text-right text-foreground font-medium">
-                        KSh {item.price.toLocaleString()}
+                        KSh {(item.buying_price || 0).toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}

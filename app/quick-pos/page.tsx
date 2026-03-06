@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ShoppingCart, Trash2, CreditCard, Loader2, Bed, Package, User, Printer, X, CheckCircle2 } from "lucide-react";
+import { Search, ShoppingCart, Trash2, CreditCard, Loader2, Bed, Package, User, Printer, X, CheckCircle2, LogOut } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -14,23 +16,22 @@ import { Dialog, DialogContent, Header, DialogTitle, DialogFooter, DialogDescrip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface InventoryItem {
-  id: string;
-  sku: string;
+  id: number;
   name: string;
-  category: string;
-  item_type: string;
-  stock_level: number;
-  reorder_point: number;
+  inventory_type: string;
+  current_stock: number;
+  reorder_level: number;
   unit: string;
-  price: number;
-  is_available: boolean;
+  buying_price: number;
+  is_active: boolean;
 }
 
 interface Room {
-  id: string;
-  type: string;
+  id: number;
+  room_number: string;
+  room_type: string;
   status: string;
-  price: number;
+  rate: number;
 }
 
 interface Staff {
@@ -39,16 +40,18 @@ interface Staff {
 }
 
 interface CartItem {
-  id: string;
+  id: number;
   name: string;
   price: number;
   quantity: number;
   type: 'item' | 'room';
-  item_type?: string;
-  stock_level?: number;
+  inventory_type?: string;
+  current_stock?: number;
 }
 
 export default function QuickPOSPage() {
+  const router = useRouter();
+  const { logout, user } = useAuth();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -71,12 +74,17 @@ export default function QuickPOSPage() {
     fetchData();
   }, []);
 
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const [itemsRes, roomsRes, staffRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/inventory/`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms/`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/inventory`),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms`),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/staff/public`)
       ]);
 
@@ -102,50 +110,50 @@ export default function QuickPOSPage() {
     const query = searchQuery.toLowerCase();
     
     const matchedItems = items.filter(item => 
-      (item.name.toLowerCase().includes(query) || item.sku.toLowerCase().includes(query)) &&
-      (activeTab === "all" || activeTab === item.item_type) &&
-      item.is_available
+      item.name.toLowerCase().includes(query) &&
+      (activeTab === "all" || activeTab === item.inventory_type) &&
+      item.is_active
     ).map(item => ({ ...item, type: 'item' }));
 
     const matchedRooms = rooms.filter(room => 
-      (room.id.toLowerCase().includes(query) || room.type.toLowerCase().includes(query)) &&
+      (room.room_number.toLowerCase().includes(query) || room.room_type.toLowerCase().includes(query)) &&
       (activeTab === "all" || activeTab === "rooms")
-    ).map(room => ({ ...room, name: `Room ${room.id} (${room.type})`, type: 'room' }));
+    ).map(room => ({ ...room, name: `Room ${room.room_number} (${room.room_type})`, type: 'room', buying_price: room.rate }));
 
     if (activeTab === "rooms") return matchedRooms;
-    if (activeTab === "bar" || activeTab === "food") return matchedItems;
+    if (activeTab === "bar" || activeTab === "kitchen") return matchedItems;
     
     return [...matchedItems, ...matchedRooms];
   }, [searchQuery, activeTab, items, rooms]);
 
   const addToCart = (data: any) => {
     setCart(prev => {
-      const existing = prev.find(i => i.id === data.id);
+      const existing = prev.find(i => i.id === data.id && i.type === data.type);
       if (existing) {
-        if (data.type === 'item' && data.item_type === 'bar' && existing.quantity >= (data.stock_level || 0)) {
+        if (data.type === 'item' && data.inventory_type === 'bar' && existing.quantity >= (data.current_stock || 0)) {
           toast({ title: "Limit reached", description: "Out of stock", variant: "destructive" });
           return prev;
         }
-        return prev.map(i => i.id === data.id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => (i.id === data.id && i.type === data.type) ? { ...i, quantity: i.quantity + 1 } : i);
       }
       return [...prev, { 
         id: data.id, 
-        name: data.type === 'room' ? `Room ${data.id}` : data.name, 
-        price: data.price, 
+        name: data.type === 'room' ? `Room ${data.room_number}` : data.name, 
+        price: data.type === 'room' ? data.rate : data.buying_price, 
         quantity: 1, 
         type: data.type,
-        item_type: data.item_type,
-        stock_level: data.stock_level
+        inventory_type: data.inventory_type,
+        current_stock: data.current_stock
       }];
     });
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (id: number, type: 'item' | 'room', delta: number) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.id === id && item.type === type) {
         const newQty = item.quantity + delta;
         if (newQty <= 0) return item;
-        if (item.type === 'item' && item.item_type === 'bar' && newQty > (item.stock_level || 0)) return item;
+        if (item.type === 'item' && item.inventory_type === 'bar' && newQty > (item.current_stock || 0)) return item;
         return { ...item, quantity: newQty };
       }
       return item;
@@ -238,6 +246,17 @@ export default function QuickPOSPage() {
           <Button variant="ghost" size="icon" onClick={() => fetchData()}>
             <Loader2 className={loading ? "animate-spin" : ""} size={20} />
           </Button>
+          <Separator orientation="vertical" className="h-8 mx-1" />
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-xs font-bold text-foreground leading-none">{user?.name}</p>
+              <p className="text-[10px] text-muted-foreground capitalize">{user?.role?.replace('_', ' ')}</p>
+            </div>
+            <Button variant="destructive" size="sm" className="gap-2" onClick={handleLogout}>
+              <LogOut size={16} />
+              <span>Logout</span>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -249,7 +268,7 @@ export default function QuickPOSPage() {
             {[
               { id: 'all', label: 'All', icon: Package },
               { id: 'bar', label: 'Bar Items', icon: Package },
-              { id: 'food', label: 'Food Items', icon: Package },
+              { id: 'kitchen', label: 'Kitchen Items', icon: Package },
               { id: 'rooms', label: 'Rooms', icon: Bed },
             ].map(tab => (
               <Button
@@ -268,36 +287,25 @@ export default function QuickPOSPage() {
           <ScrollArea className="flex-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 pr-4">
               {filteredDisplay.map((item: any) => (
-                <Card 
-                  key={item.id} 
-                  className="hover:border-primary cursor-pointer transition-all active:scale-95 group relative border-border"
-                  onClick={() => addToCart(item)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className={`p-2 rounded-lg ${item.type === 'room' ? 'bg-purple-100 text-purple-600' : (item.item_type === 'bar' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600')}`}>
-                        {item.type === 'room' ? <Bed size={20} /> : <Package size={20} />}
-                      </div>
-                      <Badge variant="secondary" className="text-[10px] uppercase">{item.type === 'room' ? 'Room' : (item.item_type || item.category)}</Badge>
-                    </div>
-                    <h3 className="font-bold text-sm mb-1">{item.type === 'room' ? `Room ${item.id}` : item.name}</h3>
-                    <div className="flex justify-between items-end mt-4">
-                      <span className="text-lg font-black text-primary">KSh {item.price.toLocaleString()}</span>
-                      {item.type === 'item' && item.item_type === 'bar' && (
-                        <span className={`text-xs font-bold ${item.stock_level <= item.reorder_point ? 'text-destructive' : 'text-muted-foreground'}`}>
-                          Qty: {item.stock_level}
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <ProductCard 
+                  key={`${item.type}-${item.id}`} 
+                  item={{
+                    id: item.id,
+                    name: item.name,
+                    buying_price: item.type === 'room' ? item.rate : item.buying_price,
+                    inventory_type: item.type === 'room' ? 'room' : item.inventory_type,
+                    current_stock: item.type === 'room' ? 1 : item.current_stock,
+                    reorder_level: item.type === 'room' ? 0 : item.reorder_level
+                  }}
+                  onAdd={() => addToCart(item)}
+                />
               ))}
             </div>
           </ScrollArea>
         </div>
 
         {/* Sidebar Cart Area */}
-        <div className="w-[400px] border-l border-border bg-card flex flex-col">
+        <div className="w-100 border-l border-border bg-card flex flex-col">
           <div className="p-6 flex items-center justify-between border-b border-border bg-muted/30">
             <div className="flex items-center gap-2">
               <ShoppingCart className="text-primary" />
@@ -315,18 +323,18 @@ export default function QuickPOSPage() {
             ) : (
               <div className="space-y-3">
                 {cart.map(item => (
-                  <div key={item.id} className="flex justify-between items-center p-3 rounded-xl border border-border bg-background group">
+                  <div key={`${item.type}-${item.id}`} className="flex justify-between items-center p-3 rounded-xl border border-border bg-background group">
                     <div className="flex-1">
                       <p className="font-bold text-sm truncate">{item.name}</p>
                       <p className="text-xs text-muted-foreground">KSh {item.price.toLocaleString()} x {item.quantity}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center border border-border rounded-lg bg-muted/50">
-                        <button onClick={() => updateQuantity(item.id, -1)} className="px-2 py-1 hover:bg-border transition-colors">-</button>
+                        <button onClick={() => updateQuantity(item.id, item.type, -1)} className="px-2 py-1 hover:bg-border transition-colors">-</button>
                         <span className="px-2 text-xs font-bold">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, 1)} className="px-2 py-1 hover:bg-border transition-colors">+</button>
+                        <button onClick={() => updateQuantity(item.id, item.type, 1)} className="px-2 py-1 hover:bg-border transition-colors">+</button>
                       </div>
-                      <span className="font-bold text-sm min-w-[80px] text-right">KSh {(item.price * item.quantity).toLocaleString()}</span>
+                      <span className="font-bold text-sm min-w-20 text-right">KSh {(item.price * item.quantity).toLocaleString()}</span>
                     </div>
                   </div>
                 ))}
@@ -358,7 +366,7 @@ export default function QuickPOSPage() {
 
       {/* Checkout Modal */}
       <Dialog open={isCheckoutModalOpen} onOpenChange={(open) => !isVerifying && setIsCheckoutModalOpen(open)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-106.25">
           <div className="pt-4">
             <DialogTitle className="text-2xl font-bold mb-2">Complete Sale</DialogTitle>
             <DialogDescription>Select your name and enter your PIN to authorize the transaction.</DialogDescription>
@@ -383,120 +391,74 @@ export default function QuickPOSPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-bold flex items-center gap-2">
-                <CreditCard size={16} /> Security PIN
+                <CreditCard size={16} /> Enter PIN
               </label>
               <Input 
                 type="password" 
-                placeholder="Enter 4-digit PIN" 
-                className="text-2xl tracking-[1em] text-center h-14" 
-                maxLength={4}
+                placeholder="••••" 
+                maxLength={4} 
+                className="text-center text-2xl tracking-[1em] h-14"
                 value={waiterPin}
                 onChange={(e) => setWaiterPin(e.target.value)}
+                disabled={isVerifying}
               />
             </div>
 
-            <div className="bg-primary/5 p-4 rounded-lg border border-primary/10">
-              <div className="flex justify-between items-center font-black">
-                <span className="text-sm text-muted-foreground uppercase">Amount Due:</span>
-                <span className="text-2xl text-primary">KSh {cartTotal.toLocaleString()}</span>
+            <div className="bg-muted p-4 rounded-xl space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Order Total:</span>
+                <span className="font-bold">KSh {cartTotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm border-t border-border pt-2">
+                <span className="text-muted-foreground">Payment Method:</span>
+                <span className="font-bold text-green-600">Cash / Mobile Money</span>
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex gap-2">
-            <Button variant="ghost" onClick={() => setIsCheckoutModalOpen(false)} disabled={isVerifying}>Cancel</Button>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button 
-              className="flex-1 font-bold h-12" 
-              onClick={handleProcessCheckout}
-              disabled={isVerifying || !selectedWaiter || waiterPin.length < 4}
+              variant="outline" 
+              onClick={() => setIsCheckoutModalOpen(false)}
+              disabled={isVerifying}
             >
-              {isVerifying ? <Loader2 className="animate-spin" /> : "Complete & Print"}
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleProcessCheckout}
+              disabled={isVerifying}
+              className="gap-2"
+            >
+              {isVerifying ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle2 size={18} />}
+              Authorize & Complete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Order Complete / Receipt Modal */}
-      <Dialog open={orderComplete} onOpenChange={(open) => {
-        if (!open) {
-          setOrderComplete(false);
-          setReceiptData(null);
-          setWaiterPin("");
-          setIsCheckoutModalOpen(false);
-        }
-      }}>
-        <DialogContent className="sm:max-w-[400px]">
-          <div className="flex flex-col items-center justify-center pt-6 text-center">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle2 size={40} />
+      {/* Success Modal */}
+      <Dialog open={orderComplete} onOpenChange={setOrderComplete}>
+        <DialogContent className="sm:max-w-100 text-center p-8">
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 size={48} />
             </div>
-            <DialogTitle className="text-2xl font-bold">Transaction Successful!</DialogTitle>
-            <p className="text-muted-foreground">Order {receiptData?.orderId} has been processed.</p>
-          </div>
-
-          <Separator className="my-6" />
-
-          {/* Receipt View */}
-          <div className="receipt-content font-mono text-sm bg-muted/20 p-6 rounded-lg border border-dashed border-border">
-            <div className="text-center mb-4">
-              <h2 className="font-bold text-lg">MARIA HAVENS POS</h2>
-              <p className="text-[10px]">Uniform Database Link Operational</p>
-              <p className="text-[10px]">{receiptData?.date}</p>
-            </div>
+            <DialogTitle className="text-2xl font-bold">Sale Successful!</DialogTitle>
+            <p className="text-muted-foreground mt-2">
+              Transaction has been recorded and inventory updated.
+            </p>
             
-            <div className="space-y-1 mb-4">
-              <div className="flex justify-between"><span>Waiter:</span> <span>{receiptData?.waiter}</span></div>
-              <div className="flex justify-between border-b border-border pb-1"><span>Order:</span> <span>{receiptData?.orderId}</span></div>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              {receiptData?.items.map((item: any) => (
-                <div key={item.id} className="flex justify-between text-[12px]">
-                  <span>{item.quantity}x {item.name}</span>
-                  <span>{(item.price * item.quantity).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-
-            <Separator className="my-4" />
-            
-            <div className="flex justify-between font-black text-lg">
-              <span>TOTAL (KSh)</span>
-              <span>{receiptData?.total.toLocaleString()}</span>
-            </div>
-            
-            <div className="text-center mt-8 pt-4 border-t border-border border-dashed">
-              <p className="text-[10px]">Thank you for visiting Maria Havens</p>
-              <p className="text-[8px] mt-1 italic">Generated by V0 POS System</p>
+            <div className="w-full mt-8 space-y-3">
+              <Button className="w-full gap-2 h-12" onClick={handlePrint}>
+                <Printer size={18} /> Print Receipt
+              </Button>
+              <Button variant="outline" className="w-full h-12" onClick={() => setOrderComplete(false)}>
+                Done
+              </Button>
             </div>
           </div>
-
-          <DialogFooter className="mt-6 flex gap-2">
-            <Button variant="outline" className="flex-1 gap-2" onClick={handlePrint}>
-              <Printer size={16} /> Print Receipt
-            </Button>
-            <Button className="flex-1 font-bold" onClick={() => setOrderComplete(false)}>
-              Done
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <style jsx global>{`
-        @media print {
-          body * { visibility: hidden; }
-          .receipt-content, .receipt-content * { visibility: visible; }
-          .receipt-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            background: white !important;
-            padding: 0 !important;
-            border: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

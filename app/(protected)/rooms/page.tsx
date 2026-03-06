@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarNav } from '@/components/sidebar-nav';
-import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -14,26 +14,42 @@ import {
   Clock, 
   Plus, 
   User,
-  Calendar
+  Calendar,
+  Loader2
 } from 'lucide-react';
-
-const MOCK_ROOMS = [
-  { id: '101', type: 'Standard Single', status: 'available', price: 85.00 },
-  { id: '102', type: 'Standard Single', status: 'occupied', guest: 'John Doe', checkOut: '2024-03-05' },
-  { id: '103', type: 'Deluxe Double', status: 'dirty', lastGuest: 'Sarah Smith' },
-  { id: '104', type: 'Deluxe Double', status: 'maintenance', issue: 'AC Leak' },
-  { id: '201', type: 'Suite', status: 'available', price: 150.00 },
-  { id: '202', type: 'Suite', status: 'occupied', guest: 'Emily Watson', checkOut: '2024-03-10' },
-  { id: '203', type: 'Executive Suite', status: 'available', price: 250.00 },
-  { id: '204', type: 'Executive Suite', status: 'dirty', lastGuest: 'Michael Brown' },
-];
+import { Room } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RoomManagementPage() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms`);
+      if (!response.ok) throw new Error('Failed to fetch rooms');
+      const data = await response.json();
+      setRooms(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not load rooms.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredRooms = filter === 'all' 
-    ? MOCK_ROOMS 
-    : MOCK_ROOMS.filter(room => room.status === filter);
+    ? rooms 
+    : rooms.filter(room => room.status === filter);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -54,6 +70,14 @@ export default function RoomManagementPage() {
       default: return <Clock className="w-4 h-4" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center lg:ml-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -82,14 +106,14 @@ export default function RoomManagementPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="border-border bg-card/50">
               <CardContent className="pt-6">
-                <p className="text-2xl font-bold text-foreground">{MOCK_ROOMS.length}</p>
+                <p className="text-2xl font-bold text-foreground">{rooms.length}</p>
                 <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Total Rooms</p>
               </CardContent>
             </Card>
             <Card className="border-border bg-card/50">
               <CardContent className="pt-6">
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {MOCK_ROOMS.filter(r => r.status === 'available').length}
+                  {rooms.filter(r => r.status === 'available').length}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Available</p>
               </CardContent>
@@ -97,7 +121,7 @@ export default function RoomManagementPage() {
             <Card className="border-border bg-card/50">
               <CardContent className="pt-6">
                 <p className="text-2xl font-bold text-primary">
-                  {MOCK_ROOMS.filter(r => r.status === 'occupied').length}
+                  {rooms.filter(r => r.status === 'occupied').length}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Occupied</p>
               </CardContent>
@@ -105,7 +129,7 @@ export default function RoomManagementPage() {
             <Card className="border-border bg-card/50">
               <CardContent className="pt-6">
                 <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {MOCK_ROOMS.filter(r => r.status === 'dirty' || r.status === 'maintenance').length}
+                  {rooms.filter(r => r.status === 'dirty' || r.status === 'maintenance').length}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">Out of Service</p>
               </CardContent>
@@ -133,7 +157,7 @@ export default function RoomManagementPage() {
               <Card key={room.id} className={`border-border bg-card/50 hover:border-primary transition-all ${room.status === 'occupied' ? 'ring-1 ring-primary/20' : ''}`}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
-                    <span className="text-2xl font-bold text-foreground">Room {room.id}</span>
+                    <span className="text-2xl font-bold text-foreground">Room {room.room_number}</span>
                     <Badge className={getStatusColor(room.status)}>
                       <div className="flex items-center gap-1">
                         {getStatusIcon(room.status)}
@@ -141,34 +165,24 @@ export default function RoomManagementPage() {
                       </div>
                     </Badge>
                   </div>
-                  <CardDescription className="text-muted-foreground">{room.type}</CardDescription>
+                  <CardDescription className="text-muted-foreground">{room.room_type}</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4 space-y-4">
                   {room.status === 'occupied' && (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm text-foreground font-medium">
                         <User className="w-4 h-4 text-primary" />
-                        <span>{room.guest}</span>
+                        <span>{room.guest_name || 'Guest'}</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="w-4 h-4" />
-                        <span>Depart: {room.checkOut}</span>
+                        <span>Depart: {room.check_out_date ? new Date(room.check_out_date).toLocaleDateString() : 'N/A'}</span>
                       </div>
                     </div>
                   )}
                   {room.status === 'available' && (
                     <div className="text-sm font-semibold text-foreground">
-                      Rate: ${room.price.toFixed(2)} / night
-                    </div>
-                  )}
-                  {room.status === 'dirty' && (
-                    <div className="text-xs text-muted-foreground italic">
-                      Needs cleaning after {room.lastGuest}
-                    </div>
-                  )}
-                  {room.status === 'maintenance' && (
-                    <div className="text-xs text-red-500 italic">
-                      Issue: {room.issue}
+                      Rate: KSh {(room.rate || 0).toLocaleString()} / night
                     </div>
                   )}
                   <div className="pt-2">

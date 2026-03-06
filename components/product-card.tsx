@@ -8,21 +8,20 @@ import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   item: {
-    id: string;
+    id: number;
     name: string;
-    price: number;
-    item_type: string;
-    stock_level: number;
-    reorder_point: number;
-    category: string;
+    buying_price: number;
+    inventory_type: string;
+    current_stock: number;
+    reorder_level: number;
   };
   onAdd: () => void;
 }
 
 export function ProductCard({ item, onAdd }: ProductCardProps) {
-  const isBar = item.item_type === "bar";
-  const isLowStock = isBar && item.stock_level <= item.reorder_point;
-  const isOutOfStock = isBar && item.stock_level <= 0;
+  const isBar = item.inventory_type === "bar";
+  const isLowStock = isBar && item.current_stock <= item.reorder_level;
+  const isOutOfStock = isBar && item.current_stock <= 0;
 
   return (
     <Card className={cn(
@@ -38,17 +37,17 @@ export function ProductCard({ item, onAdd }: ProductCardProps) {
             {isBar ? <Beer size={18} /> : <Utensils size={18} />}
           </div>
           <Badge variant={isBar ? "secondary" : "outline"} className="text-[10px] uppercase font-bold tracking-wider">
-            {item.category}
+            {item.inventory_type}
           </Badge>
         </div>
         
-        <h3 className="font-semibold text-sm line-clamp-2 mb-1 min-h-[40px]">
+        <h3 className="font-semibold text-sm line-clamp-2 mb-1 min-h-10">
           {item.name}
         </h3>
         
         <div className="flex items-center justify-between mt-2">
           <span className="text-lg font-bold text-primary">
-            KSh {item.price.toLocaleString()}
+            KSh {(item.buying_price || 0).toLocaleString()}
           </span>
           {isBar && (
             <div className="flex items-center gap-1">
@@ -57,7 +56,7 @@ export function ProductCard({ item, onAdd }: ProductCardProps) {
                 "text-xs font-medium",
                 isLowStock ? "text-destructive" : "text-muted-foreground"
               )}>
-                Qty: {item.stock_level}
+                Qty: {item.current_stock}
               </span>
             </div>
           )}

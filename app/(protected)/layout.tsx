@@ -15,10 +15,13 @@ export default function ProtectedLayout({
   const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
+    console.log('ProtectedLayout: isLoading=', isLoading, 'isAuthenticated=', isAuthenticated, 'pathname=', pathname);
     if (!isLoading) {
       if (!isAuthenticated) {
+        console.log('ProtectedLayout: Not authenticated, redirecting to login');
         router.push('/'); // Redirect to login if not authenticated
       } else if (user) {
+        console.log('ProtectedLayout: Authenticated as', user.role);
         // Standardized redirection map based on live database roles
         const roleRoutes: Record<string, string> = {
           admin: '/dashboard',
@@ -31,7 +34,9 @@ export default function ProtectedLayout({
         };
 
         const targetRoute = roleRoutes[user.role];
-        if (targetRoute && (pathname === '/' || pathname === '/dashboard')) {
+        console.log('ProtectedLayout: targetRoute=', targetRoute);
+        if (targetRoute && pathname !== targetRoute && (pathname === '/' || pathname === '/dashboard')) {
+          console.log('ProtectedLayout: Redirecting from', pathname, 'to', targetRoute);
           router.push(targetRoute);
         }
       }

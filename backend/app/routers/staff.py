@@ -14,5 +14,5 @@ def get_all_staff(db: Session = Depends(database.get_db)):
 @router.get("/public", response_model=list[dict])
 def get_public_staff_list(db: Session = Depends(database.get_db)):
     # Only return necessary fields for public picker
-    staff = db.query(Staff).filter(Staff.status == 'active').all()
+    staff = db.query(Staff).filter(Staff.is_active == True).all()
     return [{"employee_id": s.employee_id, "name": s.name} for s in staff]

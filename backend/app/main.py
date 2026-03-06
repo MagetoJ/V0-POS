@@ -12,6 +12,7 @@ app = FastAPI(title="VO POS API")
 # Establish the uniform link by allowing your frontend origin
 origins = [
     "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 # Add CORS middleware

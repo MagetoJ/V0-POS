@@ -1,13 +1,17 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import Column, Integer, String, Boolean, text, DateTime
 from ..database import Base
 
 class Staff(Base):
     __tablename__ = "staff"
-    id = Column(Integer, primary_key=True, index=True)
-    employee_id = Column(String, unique=True, index=True)
-    name = Column(String)
-    role = Column(Enum('admin', 'manager', 'cashier', 'waiter', 'kitchen_staff', 'receptionist', 'delivery', 'housekeeping', 'staff', 'accountant', name='user_role'))
+    id = Column(Integer, primary_key=True)
+    employee_id = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    pin = Column(String, nullable=False) # Actual DB column name
+    username = Column(String, unique=True, nullable=False)
+    password = Column(String, nullable=False) # Actual DB column name
     email = Column(String, nullable=True)
-    phone = Column(String, nullable=True)
-    hashed_password = Column(String)
-    status = Column(String, default='active')
+    is_active = Column(Boolean, server_default=text('true'))
+    reset_code = Column(String, nullable=True)
+    reset_code_expires = Column(DateTime, nullable=True)
+    requires_clearing = Column(Boolean, server_default=text('false'))

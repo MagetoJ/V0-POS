@@ -1,99 +1,55 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from typing import Optional
-from ..database import get_db
-from .. import models, schemas, auth_utils
-from pydantic import BaseModel
-import os
+from .. import models, schemas, database, auth_utils
 
-# Configuration for JWT
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-keep-it-safe")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 # 24 hours
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-router = APIRouter(
-    prefix="/api/auth",
-    tags=["auth"]
-)
+import time
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    role: str
-    employee_id: str
-    name: str
+@router.post("/login")
+def login(credentials: schemas.LoginRequest, db: Session = Depends(database.get_db)):
+    start_time = time.time()
+    
+    # 1. Fetch user by employee_id from Render DB
+    user = db.query(models.Staff).filter(models.Staff.employee_id == credentials.employee_id).first()
+    db_time = time.time() - start_time
+    print(f"DB lookup took: {db_time:.4f}s")
+    
+    # 2. Check if user exists
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
 
-class LoginRequest(BaseModel):
-    employee_id: str
-    password: str
+    # 3. Verify PIN (using the correct 'pin' column)
+    verify_start = time.time()
+    is_valid = auth_utils.verify_password(credentials.pin, user.pin)
+    verify_time = time.time() - verify_start
+    print(f"PIN verification took: {verify_time:.4f}s")
+    
+    if not is_valid:
+        raise HTTPException(status_code=401, detail="Invalid PIN")
 
-class PinVerifyRequest(BaseModel):
+    total_time = time.time() - start_time
+    print(f"Total backend login time: {total_time:.4f}s")
+
+    return {
+        "user": {
+            "name": user.name,
+            "role": user.role,
+            "username": user.username,
+            "employee_id": user.employee_id
+        },
+        "token": auth_utils.create_access_token(data={"sub": user.employee_id})
+    }
+
+class VerifyPinRequest(schemas.staff.BaseModel):
     employee_id: str
     pin: str
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-@router.post("/login", response_model=Token)
-async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(models.staff.Staff).filter(
-        func.lower(models.staff.Staff.employee_id) == func.lower(login_data.employee_id)
-    ).first()
-    
-    if not user or not auth_utils.verify_password(login_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect employee ID or PIN",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    if user.status != 'active':
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
-        )
-
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.employee_id, "role": user.role, "name": user.name},
-        expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer",
-        "role": user.role,
-        "employee_id": user.employee_id,
-        "name": user.name
-    }
-
 @router.post("/verify-pin")
-async def verify_pin(data: PinVerifyRequest, db: Session = Depends(get_db)):
-    user = db.query(models.staff.Staff).filter(
-        func.lower(models.staff.Staff.employee_id) == func.lower(data.employee_id)
-    ).first()
-    
-    if not user or not auth_utils.verify_password(data.pin, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid PIN"
-        )
-    
-    return {"status": "success", "employee_id": user.employee_id, "name": user.name}
-
-@router.get("/me")
-async def get_me(db: Session = Depends(get_db)):
-    # This would normally use a security dependency to get the current user
-    # For now, we'll keep it simple
-    return {"message": "Authenticated"}
+def verify_pin(request: VerifyPinRequest, db: Session = Depends(database.get_db)):
+    user = db.query(models.Staff).filter(models.Staff.employee_id == request.employee_id).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if not auth_utils.verify_password(request.pin, user.pin):
+        raise HTTPException(status_code=401, detail="Invalid PIN")
+    return {"name": user.name, "role": user.role, "employee_id": user.employee_id}

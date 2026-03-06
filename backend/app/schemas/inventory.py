@@ -1,19 +1,23 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class InventoryItem(BaseModel):
-    id: str
-    sku: str
+    id: int
     name: str
-    category: str
-    item_type: str
-    stock_level: int
-    reorder_point: int
-    unit: str
-    price: float
-    show_online: bool
-    description: Optional[str] = None
-    is_available: bool
+    unit: Optional[str] = None
+    current_stock: int = 0
+    minimum_stock: int = 10
+    cost_per_unit: Optional[float] = None
+    supplier: Optional[str] = None
+    inventory_type: str = "bar" # bar (auto-deduct) or kitchen (static)
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    image_url: Optional[str] = None
+    allowed_roles: Optional[str] = None
+    buying_price: Optional[float] = None
+    reorder_level: int = 10
 
     class Config:
         from_attributes = True

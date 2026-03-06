@@ -50,7 +50,7 @@ export default function DashboardPage() {
           {/* Header */}
           <div className="pt-12 lg:pt-0">
             <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Welcome, {user?.name.split(' ')[0]}
+              Welcome, {user?.name?.split(' ')[0] || 'User'}
             </h1>
             <p className="text-muted-foreground mt-2">
               {formattedDate}

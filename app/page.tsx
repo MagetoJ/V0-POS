@@ -11,7 +11,7 @@ import { Lock, AlertCircle, Loader2, Monitor } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [employeeId, setEmployeeId] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -23,52 +23,39 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          employee_id: id,
-          password: p,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || 'Login failed. Please try again.');
-        setIsLoading(false);
-        return;
+      console.log('Attempting login for:', id);
+      await login(id, p);
+      console.log('Login successful, checking session...');
+      
+      // We need to get the user role from the session storage since the 'user' state 
+      // might not be updated yet in this render cycle
+      const sessionStr = localStorage.getItem('auth-session');
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        const role = session.user.role;
+        console.log('User role identified:', role);
+        
+        const roleRoutes: Record<string, string> = {
+          admin: '/dashboard',
+          manager: '/dashboard',
+          kitchen_staff: '/kitchen',
+          receptionist: '/rooms',
+          accountant: '/accounting',
+          cashier: '/quick-pos',
+          waiter: '/pos'
+        };
+        
+        const targetRoute = roleRoutes[role] || '/dashboard';
+        console.log('Redirecting to:', targetRoute);
+        router.push(targetRoute);
+      } else {
+        console.warn('No session found in localStorage after login success');
+        router.push('/dashboard');
       }
-
-      // Update auth context state and localStorage
-      const session = {
-        user: {
-          id: data.employee_id,
-          employeeId: data.employee_id,
-          name: data.name,
-          role: data.role,
-        },
-        token: data.access_token,
-        expiresAt: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
-      };
-      
-      login(session);
-      
-      // Role-based redirection map matching ProtectedLayout
-      const roleRoutes: Record<string, string> = {
-        admin: '/dashboard',
-        manager: '/dashboard',
-        kitchen_staff: '/kitchen',
-        receptionist: '/rooms',
-        accountant: '/accounting',
-        cashier: '/quick-pos',
-        waiter: '/pos'
-      };
-
-      const targetRoute = roleRoutes[data.role] || '/dashboard';
-      router.push(targetRoute);
-    } catch {
-      setError('Connection to backend failed. Please ensure the API is running.');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -120,7 +107,7 @@ export default function LoginPage() {
               <Input
                 id="employeeId"
                 type="text"
-                placeholder="e.g., EMP001"
+                placeholder="Enter your Employee ID"
                 value={employeeId}
                 onChange={(e) => setEmployeeId(e.target.value)}
                 disabled={isLoading}
@@ -128,7 +115,7 @@ export default function LoginPage() {
                 autoFocus
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Try: EMP001 (Cashier), EMP003 (Manager), EMP006 (Waiter), EMP007 (Accounts)
+                Use your Employee ID (e.g., Kizito-MH)
               </p>
             </div>
 
@@ -146,7 +133,7 @@ export default function LoginPage() {
                 className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                PINs: 1234, 9012, 1111, or 2222
+                Demo PINs: 1234, 9012, 1111, or 2222
               </p>
             </div>
 

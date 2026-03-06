@@ -40,16 +40,18 @@ export interface StockTransfer {
 }
 
 export interface User {
-  id: string;
-  employeeId: string;
+  id: number;
+  employee_id: string;
   name: string;
   role: UserRole;
-  storeId: string;
+  pin: string;
+  is_active: boolean;
+  username: string;
+  password?: string;
   email?: string;
-  phone?: string;
-  hireDate: string;
-  status: 'active' | 'inactive';
-  avatar?: string;
+  reset_code?: string;
+  reset_code_expires?: string;
+  requires_clearing: boolean;
 }
 
 export interface AuthSession {
@@ -92,30 +94,38 @@ export interface Performance {
 }
 
 export interface Room {
-  id: string;
-  type: string;
+  id: number;
+  room_number: string;
+  room_type?: string;
   status: 'available' | 'occupied' | 'dirty' | 'maintenance';
-  price?: number;
-  guest?: string;
-  checkIn?: string;
-  checkOut?: string;
-  lastGuest?: string;
-  issue?: string;
+  guest_name?: string;
+  check_in_date?: string;
+  check_out_date?: string;
+  rate?: number;
+  created_at?: string;
+  updated_at?: string;
+  image_url?: string;
+  amenities?: string;
+  floor?: number;
+  max_occupancy?: number;
 }
 
 export interface InventoryItem {
-  id: string;
-  sku: string;
+  id: number;
   name: string;
-  category: string;
-  item_type: 'bar' | 'food';
-  stock_level: number;
-  reorder_point: number;
-  unit: string;
-  price: number;
-  is_available: boolean;
-  show_online: boolean;
-  description?: string;
+  unit?: string;
+  current_stock: number;
+  minimum_stock: number;
+  cost_per_unit?: number;
+  supplier?: string;
+  inventory_type: 'bar' | 'kitchen';
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+  image_url?: string;
+  allowed_roles?: string;
+  buying_price?: number;
+  reorder_level: number;
 }
 
 export interface Supplier {
@@ -188,6 +198,22 @@ export interface Expense {
   date: string;
   paidTo?: string;
   status: 'paid' | 'pending';
+}
+
+export interface Order {
+  id: number;
+  order_number: string;
+  order_type: string;
+  table_id?: number;
+  room_id?: number;
+  customer_name?: string;
+  customer_phone?: string;
+  staff_id?: number;
+  status: string;
+  subtotal: number;
+  total_amount: number;
+  payment_status: string;
+  created_at?: string;
 }
 
 export interface AuthError {
